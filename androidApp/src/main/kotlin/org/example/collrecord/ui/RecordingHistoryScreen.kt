@@ -3,11 +3,11 @@ package org.example.collrecord.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -77,20 +77,18 @@ private fun RecordingRow(
     onToggle: () -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    item.workingPaper?.debiturName ?: item.recording.taskId,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text("Task: ${item.recording.taskId}")
-                Text("Ukuran: ${item.recording.fileSizeBytes / 1024} KB")
-            }
+            Text(
+                item.workingPaper?.debiturName ?: item.recording.taskId,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text("Task: ${item.recording.taskId}")
+            Text("Ukuran: ${item.recording.fileSizeBytes / 1024} KB")
+            Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = onToggle) {
                 Text(if (isPlaying) "Stop" else "Play")
             }
