@@ -32,4 +32,16 @@ actual class AudioPlayer actual constructor(private val context: PlatformContext
     }
 
     actual fun isPlaying(): Boolean = mediaPlayer?.isPlaying == true
+
+    actual fun currentPositionMs(): Int = try {
+        mediaPlayer?.currentPosition ?: 0
+    } catch (e: Exception) {
+        0
+    }
+
+    actual fun durationMs(): Int = try {
+        mediaPlayer?.duration ?: 0
+    } catch (e: Exception) {
+        0
+    }
 }

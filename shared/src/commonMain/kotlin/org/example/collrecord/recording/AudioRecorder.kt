@@ -16,4 +16,7 @@ expect class AudioRecorder(context: PlatformContext) {
     fun stopRecording(): String?
 
     fun isRecording(): Boolean
+
+    /** Level amplitudo mic saat ini (buat visualisasi waveform live). 0 kalau tidak sedang rekam. */
+    fun currentAmplitude(): Int
 }

@@ -43,6 +43,7 @@ fun RecordingScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val liveAmplitudes by viewModel.liveAmplitudes.collectAsState()
 
     var hasPermissions by remember {
         mutableStateOf(
@@ -108,6 +109,8 @@ fun RecordingScreen(
                 }
                 is RecordingUiState.Recording -> {
                     Text("Sedang merekam...")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    WaveformBars(amplitudes = liveAmplitudes)
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { viewModel.finishVisit(task.taskId) }) {
                         Text("Selesai & Kirim")

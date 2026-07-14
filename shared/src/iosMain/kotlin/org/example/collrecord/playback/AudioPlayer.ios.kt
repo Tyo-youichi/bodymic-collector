@@ -7,4 +7,6 @@ actual class AudioPlayer actual constructor(context: PlatformContext) {
     actual fun play(filePath: String, onCompletion: () -> Unit) {}
     actual fun stop() {}
     actual fun isPlaying(): Boolean = false
+    actual fun currentPositionMs(): Int = 0
+    actual fun durationMs(): Int = 0
 }

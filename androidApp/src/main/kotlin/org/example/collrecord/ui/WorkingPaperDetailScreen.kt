@@ -33,12 +33,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import org.example.collrecord.data.RecordingStorage
 import org.example.collrecord.model.WorkingPaper
 import org.example.collrecord.platform.PlatformContext
 import org.example.collrecord.playback.AudioPlayer
 import org.example.collrecord.ui.theme.CollectorBlue
 import org.example.collrecord.ui.theme.accentColorFor
+import java.io.File
 
 @Composable
 fun WorkingPaperDetailScreen(
@@ -52,14 +54,26 @@ fun WorkingPaperDetailScreen(
     val player = remember { AudioPlayer(PlatformContext(context.applicationContext)) }
     var isPlaying by remember { mutableStateOf(false) }
     var recordingPath by remember { mutableStateOf<String?>(null) }
+    var waveform by remember { mutableStateOf<List<Int>>(emptyList()) }
+    var playbackProgress by remember { mutableStateOf(0f) }
 
     // Cek ulang status rekaman tiap kali task-nya beda (buka detail debitur lain).
     LaunchedEffect(task.taskId) {
         player.stop()
         isPlaying = false
-        recordingPath = RecordingStorage.listRecordings(context)
+        playbackProgress = 0f
+        val path = RecordingStorage.listRecordings(context)
             .find { it.taskId == task.taskId }
             ?.filePath
+        recordingPath = path
+        waveform = path?.let { p ->
+            val waveFile = File(File(p).parentFile, "${File(p).nameWithoutExtension}.wave")
+            if (waveFile.exists()) {
+                waveFile.readText().split(",").mapNotNull { it.toIntOrNull() }
+            } else {
+                emptyList()
+            }
+        } ?: emptyList()
     }
 
     // Stop playback otomatis begitu keluar dari halaman Detail ini (balik ke Daftar, lanjut Rekam, dll).
@@ -67,13 +81,26 @@ fun WorkingPaperDetailScreen(
         onDispose { player.stop() }
     }
 
+    // Sinkronisasi posisi playhead ke waveform selama sedang play.
+    LaunchedEffect(isPlaying) {
+        while (isPlaying) {
+            val duration = player.durationMs()
+            playbackProgress = if (duration > 0) player.currentPositionMs().toFloat() / duration else 0f
+            delay(100)
+        }
+    }
+
     fun togglePlay() {
         val path = recordingPath ?: return
         if (isPlaying) {
             player.stop()
             isPlaying = false
+            playbackProgress = 0f
         } else {
-            player.play(path) { isPlaying = false }
+            player.play(path) {
+                isPlaying = false
+                playbackProgress = 0f
+            }
             isPlaying = true
         }
     }
@@ -169,6 +196,10 @@ fun WorkingPaperDetailScreen(
                         Text("Rekaman Kunjungan", fontWeight = FontWeight.Medium)
                         Text("Tersimpan di device", style = MaterialTheme.typography.bodySmall)
                     }
+                }
+                if (waveform.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    WaveformBars(amplitudes = waveform, progress = if (isPlaying) playbackProgress else -1f)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(

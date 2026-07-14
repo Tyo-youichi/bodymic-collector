@@ -7,4 +7,8 @@ expect class AudioPlayer(context: PlatformContext) {
     fun play(filePath: String, onCompletion: () -> Unit)
     fun stop()
     fun isPlaying(): Boolean
+
+    /** Buat sinkronisasi progress waveform saat play. */
+    fun currentPositionMs(): Int
+    fun durationMs(): Int
 }

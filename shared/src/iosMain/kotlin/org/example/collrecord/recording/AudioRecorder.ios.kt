@@ -11,4 +11,6 @@ actual class AudioRecorder actual constructor(context: PlatformContext) {
     actual fun stopRecording(): String? = null
 
     actual fun isRecording(): Boolean = false
+
+    actual fun currentAmplitude(): Int = 0
 }

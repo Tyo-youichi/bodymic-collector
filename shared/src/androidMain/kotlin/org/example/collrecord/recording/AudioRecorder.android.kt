@@ -48,4 +48,10 @@ actual class AudioRecorder actual constructor(private val context: PlatformConte
     }
 
     actual fun isRecording(): Boolean = recorder != null
+
+    actual fun currentAmplitude(): Int = try {
+        recorder?.maxAmplitude ?: 0
+    } catch (e: Exception) {
+        0
+    }
 }
