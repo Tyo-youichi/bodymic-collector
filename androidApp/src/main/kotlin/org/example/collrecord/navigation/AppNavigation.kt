@@ -17,7 +17,10 @@ import org.example.collrecord.viewmodel.WorkingPaperViewModel
 // Cukup buat 3 layar phase 1; upgrade ke Navigation library kalau alurnya makin banyak.
 private sealed class Screen {
     object List : Screen()
-    data class Recording(val task: WorkingPaper) : Screen()
+    // instanceId dibuat baru tiap kali user masuk ke Recording screen (termasuk task yang sama
+    // dibuka ulang), supaya RecordingViewModel selalu fresh dan nggak kebawa state lama
+    // (bug: state "Uploaded" dari task sebelumnya bikin task berikutnya langsung ke-bounce balik).
+    data class Recording(val task: WorkingPaper, val instanceId: Long = System.nanoTime()) : Screen()
     object History : Screen()
 }
 
@@ -38,7 +41,9 @@ fun AppNavigation() {
         is Screen.Recording -> {
             RecordingScreen(
                 task = screen.task,
-                onFinished = { currentScreen = Screen.List }
+                instanceKey = screen.instanceId.toString(),
+                onFinished = { currentScreen = Screen.List },
+                onBack = { currentScreen = Screen.List }
             )
         }
         is Screen.History -> {

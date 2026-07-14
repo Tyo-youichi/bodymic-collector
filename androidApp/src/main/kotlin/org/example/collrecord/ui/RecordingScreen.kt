@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,8 +36,10 @@ import org.example.collrecord.viewmodel.RecordingViewModel
 @Composable
 fun RecordingScreen(
     task: WorkingPaper,
+    instanceKey: String,
     onFinished: () -> Unit,
-    viewModel: RecordingViewModel = viewModel()
+    onBack: () -> Unit,
+    viewModel: RecordingViewModel = viewModel(key = instanceKey)
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -69,7 +72,17 @@ fun RecordingScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Kunjungan: ${task.debiturName}") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Kunjungan: ${task.debiturName}") },
+                navigationIcon = {
+                    TextButton(onClick = {
+                        viewModel.cancelRecording()
+                        onBack()
+                    }) { Text("Kembali") }
+                }
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier

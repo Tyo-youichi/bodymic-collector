@@ -14,6 +14,7 @@ import org.example.collrecord.location.LocationProvider
 import org.example.collrecord.platform.PlatformContext
 import org.example.collrecord.recording.AudioRecorder
 import org.example.collrecord.upload.UploadWorker
+import java.io.File
 
 sealed class RecordingUiState {
     object Idle : RecordingUiState()
@@ -75,5 +76,11 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
             WorkManager.getInstance(getApplication()).enqueue(uploadRequest)
             _uiState.value = RecordingUiState.Uploaded
         }
+    }
+
+    /** Dipanggil kalau user tekan Back sebelum/saat rekam — batalin & buang file, jangan di-upload. */
+    fun cancelRecording() {
+        val filePath = recorder.stopRecording()
+        filePath?.let { File(it).delete() }
     }
 }
