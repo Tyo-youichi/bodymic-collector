@@ -21,12 +21,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.example.collrecord.data.RecordingStorage
 import org.example.collrecord.model.WorkingPaper
+import org.example.collrecord.platform.PlatformContext
+import org.example.collrecord.playback.AudioPlayer
 import org.example.collrecord.ui.theme.CollectorBlue
 import org.example.collrecord.ui.theme.accentColorFor
 
@@ -34,28 +44,64 @@ import org.example.collrecord.ui.theme.accentColorFor
 fun WorkingPaperDetailScreen(
     task: WorkingPaper,
     onBack: () -> Unit,
-    onStartVisit: () -> Unit,
-    onHistoryClick: () -> Unit
+    onStartVisit: () -> Unit
 ) {
+    val context = LocalContext.current
     val accent = accentColorFor(task.businessUnit)
+
+    val player = remember { AudioPlayer(PlatformContext(context.applicationContext)) }
+    var isPlaying by remember { mutableStateOf(false) }
+    var recordingPath by remember { mutableStateOf<String?>(null) }
+
+    // Cek ulang status rekaman tiap kali task-nya beda (buka detail debitur lain).
+    LaunchedEffect(task.taskId) {
+        player.stop()
+        isPlaying = false
+        recordingPath = RecordingStorage.listRecordings(context)
+            .find { it.taskId == task.taskId }
+            ?.filePath
+    }
+
+    // Stop playback otomatis begitu keluar dari halaman Detail ini (balik ke Daftar, lanjut Rekam, dll).
+    DisposableEffect(Unit) {
+        onDispose { player.stop() }
+    }
+
+    fun togglePlay() {
+        val path = recordingPath ?: return
+        if (isPlaying) {
+            player.stop()
+            isPlaying = false
+        } else {
+            player.play(path) { isPlaying = false }
+            isPlaying = true
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {},
-                navigationIcon = { TextButton(onClick = onBack) { Text("Tutup") } },
-                actions = { TextButton(onClick = onHistoryClick) { Text("Riwayat") } }
+                navigationIcon = {
+                    TextButton(onClick = {
+                        player.stop()
+                        onBack()
+                    }) { Text("Tutup") }
+                }
             )
         },
         bottomBar = {
             Button(
-                onClick = onStartVisit,
+                onClick = {
+                    player.stop()
+                    onStartVisit()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = CollectorBlue)
             ) {
-                Text("Mulai Kunjungan & Rekam")
+                Text(if (recordingPath == null) "Mulai Kunjungan & Rekam" else "Rekam Ulang Kunjungan")
             }
         }
     ) { padding ->
@@ -114,6 +160,26 @@ fun WorkingPaperDetailScreen(
                 secondary = "Billing ${formatRupiah(task.billing)} • Denda ${formatRupiah(task.denda)}"
             )
             HorizontalDivider()
+
+            if (recordingPath != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("🎙️", modifier = Modifier.width(32.dp))
+                    Column {
+                        Text("Rekaman Kunjungan", fontWeight = FontWeight.Medium)
+                        Text("Tersimpan di device", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { togglePlay() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (isPlaying) "Stop" else "Play Rekaman")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider()
+            }
         }
     }
 }

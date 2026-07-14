@@ -8,14 +8,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.example.collrecord.model.WorkingPaper
-import org.example.collrecord.ui.RecordingHistoryScreen
 import org.example.collrecord.ui.RecordingScreen
 import org.example.collrecord.ui.WorkingPaperDetailScreen
 import org.example.collrecord.ui.WorkingPaperListScreen
 import org.example.collrecord.viewmodel.WorkingPaperViewModel
 
 // Navigasi sederhana pakai state, tanpa dependency navigation-compose tambahan.
-// Cukup buat 4 layar phase 1; upgrade ke Navigation library kalau alurnya makin banyak.
+// Cukup buat 3 layar phase 1; upgrade ke Navigation library kalau alurnya makin banyak.
 private sealed class Screen {
     object List : Screen()
     data class Detail(val task: WorkingPaper) : Screen()
@@ -23,7 +22,6 @@ private sealed class Screen {
     // dibuka ulang), supaya RecordingViewModel selalu fresh dan nggak kebawa state lama
     // (bug: state "Uploaded" dari task sebelumnya bikin task berikutnya langsung ke-bounce balik).
     data class Recording(val task: WorkingPaper, val instanceId: Long = System.nanoTime()) : Screen()
-    data class History(val fromTask: WorkingPaper) : Screen()
 }
 
 @Composable
@@ -43,8 +41,7 @@ fun AppNavigation() {
             WorkingPaperDetailScreen(
                 task = screen.task,
                 onBack = { currentScreen = Screen.List },
-                onStartVisit = { currentScreen = Screen.Recording(screen.task) },
-                onHistoryClick = { currentScreen = Screen.History(screen.task) }
+                onStartVisit = { currentScreen = Screen.Recording(screen.task) }
             )
         }
         is Screen.Recording -> {
@@ -54,9 +51,6 @@ fun AppNavigation() {
                 onFinished = { currentScreen = Screen.List },
                 onBack = { currentScreen = Screen.Detail(screen.task) }
             )
-        }
-        is Screen.History -> {
-            RecordingHistoryScreen(onBack = { currentScreen = Screen.Detail(screen.fromTask) })
         }
     }
 }
