@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,7 +44,8 @@ fun WorkingPaperListScreen(
     taskList: List<WorkingPaper>,
     hasMore: Boolean,
     onLoadMore: () -> Unit,
-    onTaskSelected: (WorkingPaper) -> Unit
+    onTaskSelected: (WorkingPaper) -> Unit,
+    listState: LazyListState
 ) {
     val grouped = taskList.groupBy { it.dueDate }.toSortedMap()
 
@@ -61,6 +63,7 @@ fun WorkingPaperListScreen(
         containerColor = Color.White
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)

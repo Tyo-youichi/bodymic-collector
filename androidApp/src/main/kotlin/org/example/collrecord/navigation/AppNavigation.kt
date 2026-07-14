@@ -1,5 +1,6 @@
 package org.example.collrecord.navigation
 
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,13 +32,18 @@ fun AppNavigation() {
     val taskList by workingPaperViewModel.taskList.collectAsState()
     val visibleCount by workingPaperViewModel.visibleCount.collectAsState()
 
+    // Di-hoist ke sini (bukan di dalam WorkingPaperListScreen) supaya posisi scroll-nya
+    // nggak reset tiap kali user buka Detail lalu balik lagi ke List.
+    val listState = rememberLazyListState()
+
     when (val screen = currentScreen) {
         is Screen.List -> {
             WorkingPaperListScreen(
                 taskList = taskList.take(visibleCount),
                 hasMore = visibleCount < taskList.size,
                 onLoadMore = { workingPaperViewModel.loadMore() },
-                onTaskSelected = { task -> currentScreen = Screen.Detail(task) }
+                onTaskSelected = { task -> currentScreen = Screen.Detail(task) },
+                listState = listState
             )
         }
         is Screen.Detail -> {
@@ -51,7 +57,9 @@ fun AppNavigation() {
             RecordingScreen(
                 task = screen.task,
                 instanceKey = screen.instanceId.toString(),
-                onFinished = { currentScreen = Screen.List },
+                // Selesai rekam -> balik ke Detail task yang barusan direkam (bukan ke List),
+                // biar user langsung lihat hasil rekaman & lokasinya.
+                onFinished = { currentScreen = Screen.Detail(screen.task) },
                 onBack = { currentScreen = Screen.Detail(screen.task) }
             )
         }
