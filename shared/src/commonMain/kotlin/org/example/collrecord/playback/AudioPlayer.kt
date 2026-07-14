@@ -11,4 +11,7 @@ expect class AudioPlayer(context: PlatformContext) {
     /** Buat sinkronisasi progress waveform saat play. */
     fun currentPositionMs(): Int
     fun durationMs(): Int
+
+    /** Geser posisi playback (buat scrub di waveform). */
+    fun seekTo(positionMs: Int)
 }

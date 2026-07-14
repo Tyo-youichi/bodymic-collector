@@ -44,4 +44,12 @@ actual class AudioPlayer actual constructor(private val context: PlatformContext
     } catch (e: Exception) {
         0
     }
+
+    actual fun seekTo(positionMs: Int) {
+        try {
+            mediaPlayer?.seekTo(positionMs)
+        } catch (e: Exception) {
+            // no-op kalau player belum siap
+        }
+    }
 }

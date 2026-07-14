@@ -9,4 +9,5 @@ actual class AudioPlayer actual constructor(context: PlatformContext) {
     actual fun isPlaying(): Boolean = false
     actual fun currentPositionMs(): Int = 0
     actual fun durationMs(): Int = 0
+    actual fun seekTo(positionMs: Int) {}
 }

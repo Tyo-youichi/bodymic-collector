@@ -1,6 +1,8 @@
 package org.example.collrecord.ui
 
+import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +16,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,9 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import org.example.collrecord.data.RecordingStorage
 import org.example.collrecord.model.WorkingPaper
@@ -56,6 +63,7 @@ fun WorkingPaperDetailScreen(
     var recordingPath by remember { mutableStateOf<String?>(null) }
     var waveform by remember { mutableStateOf<List<Int>>(emptyList()) }
     var playbackProgress by remember { mutableStateOf(0f) }
+    var durationMs by remember { mutableStateOf(0) }
 
     // Cek ulang status rekaman tiap kali task-nya beda (buka detail debitur lain).
     LaunchedEffect(task.taskId) {
@@ -74,6 +82,7 @@ fun WorkingPaperDetailScreen(
                 emptyList()
             }
         } ?: emptyList()
+        durationMs = path?.let { getAudioDurationMs(it) } ?: 0
     }
 
     // Stop playback otomatis begitu keluar dari halaman Detail ini (balik ke Daftar, lanjut Rekam, dll).
@@ -103,6 +112,23 @@ fun WorkingPaperDetailScreen(
             }
             isPlaying = true
         }
+    }
+
+    // Geser/tap di waveform buat lompat ke posisi tertentu. Kalau lagi nggak play, mulai
+    // playback langsung dari posisi yang di-drag.
+    fun seekTo(fraction: Float) {
+        val path = recordingPath ?: return
+        if (durationMs <= 0) return
+        val targetMs = (fraction * durationMs).toInt()
+        if (!isPlaying) {
+            player.play(path) {
+                isPlaying = false
+                playbackProgress = 0f
+            }
+            isPlaying = true
+        }
+        player.seekTo(targetMs)
+        playbackProgress = fraction
     }
 
     Scaffold(
@@ -190,28 +216,75 @@ fun WorkingPaperDetailScreen(
 
             if (recordingPath != null) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🎙️", modifier = Modifier.width(32.dp))
-                    Column {
-                        Text("Rekaman Kunjungan", fontWeight = FontWeight.Medium)
-                        Text("Tersimpan di device", style = MaterialTheme.typography.bodySmall)
+                Text("Rekaman Kunjungan", fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            formatDurationMs((playbackProgress * durationMs).toInt()),
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            formatDurationMs(durationMs),
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+
+                        if (waveform.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            WaveformBars(
+                                amplitudes = waveform,
+                                progress = if (isPlaying) playbackProgress else -1f,
+                                showPlayhead = isPlaying,
+                                onSeek = { fraction -> seekTo(fraction) }
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            WaveformRuler(durationMs = durationMs)
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            OutlinedButton(
+                                onClick = { togglePlay() },
+                                modifier = Modifier.size(64.dp),
+                                shape = CircleShape,
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+                            ) {
+                                Text(if (isPlaying) "⏸" else "▶", fontSize = 22.sp)
+                            }
+                        }
                     }
                 }
-                if (waveform.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    WaveformBars(amplitudes = waveform, progress = if (isPlaying) playbackProgress else -1f)
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = { togglePlay() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (isPlaying) "Stop" else "Play Rekaman")
-                }
+
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
             }
         }
+    }
+}
+
+private fun getAudioDurationMs(path: String): Int {
+    val retriever = MediaMetadataRetriever()
+    return try {
+        retriever.setDataSource(path)
+        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toIntOrNull() ?: 0
+    } catch (e: Exception) {
+        0
+    } finally {
+        retriever.release()
     }
 }
 

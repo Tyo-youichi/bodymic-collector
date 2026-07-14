@@ -8,10 +8,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,7 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,6 +51,7 @@ fun RecordingScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val liveAmplitudes by viewModel.liveAmplitudes.collectAsState()
+    val elapsedMs by viewModel.elapsedMs.collectAsState()
 
     var hasPermissions by remember {
         mutableStateOf(
@@ -108,9 +116,28 @@ fun RecordingScreen(
                     }
                 }
                 is RecordingUiState.Recording -> {
-                    Text("Sedang merekam...")
-                    Spacer(modifier = Modifier.height(12.dp))
-                    WaveformBars(amplitudes = liveAmplitudes)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                formatDurationMs(elapsedMs),
+                                color = Color.White,
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text("Sedang merekam...", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            WaveformBars(amplitudes = liveAmplitudes)
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { viewModel.finishVisit(task.taskId) }) {
                         Text("Selesai & Kirim")

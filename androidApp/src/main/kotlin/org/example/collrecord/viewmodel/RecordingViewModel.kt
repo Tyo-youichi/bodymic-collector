@@ -43,18 +43,24 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
     private val fullAmplitudeHistory = mutableListOf<Int>()
     private var amplitudeJob: Job? = null
 
+    private val _elapsedMs = MutableStateFlow(0)
+    val elapsedMs: StateFlow<Int> = _elapsedMs
+
     fun startRecording(taskId: String) {
         try {
             recorder.startRecording(taskId)
             _uiState.value = RecordingUiState.Recording
             fullAmplitudeHistory.clear()
             _liveAmplitudes.value = emptyList()
+            _elapsedMs.value = 0
+            val startTime = System.currentTimeMillis()
             amplitudeJob = viewModelScope.launch {
                 while (isActive) {
                     delay(150)
                     val amp = recorder.currentAmplitude()
                     fullAmplitudeHistory.add(amp)
                     _liveAmplitudes.value = fullAmplitudeHistory.takeLast(40)
+                    _elapsedMs.value = (System.currentTimeMillis() - startTime).toInt()
                 }
             }
         } catch (e: Exception) {
