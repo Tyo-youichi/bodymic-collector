@@ -9,6 +9,7 @@ data class WorkingPaper(
     @SerialName("no_contract") val noContract: String,
     @SerialName("customer_id") val customerId: String,
     @SerialName("debitur_name") val debiturName: String,
+    @SerialName("alamat") val alamat: String,
     @SerialName("business_unit") val businessUnit: String,
     @SerialName("due_date") val dueDate: String,
     @SerialName("overdue") val overdue: Int,

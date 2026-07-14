@@ -85,6 +85,7 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
                 _uiState.value = RecordingUiState.Error("Gagal ambil lokasi")
                 return@launch
             }
+            saveLocation(filePath, coordinate.latitude, coordinate.longitude)
 
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -118,5 +119,12 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
         val audioFile = File(audioFilePath)
         val waveformFile = File(audioFile.parentFile, "${audioFile.nameWithoutExtension}.wave")
         waveformFile.writeText(fullAmplitudeHistory.joinToString(","))
+    }
+
+    /** Simpan koordinat lokasi saat rekaman selesai, biar bisa ditampilkan lagi di halaman Detail. */
+    private fun saveLocation(audioFilePath: String, latitude: Double, longitude: Double) {
+        val audioFile = File(audioFilePath)
+        val locationFile = File(audioFile.parentFile, "${audioFile.nameWithoutExtension}.location")
+        locationFile.writeText("$latitude,$longitude")
     }
 }

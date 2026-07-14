@@ -1,6 +1,8 @@
 package org.example.collrecord.ui
 
+import android.content.Intent
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,6 +66,7 @@ fun WorkingPaperDetailScreen(
     var waveform by remember { mutableStateOf<List<Int>>(emptyList()) }
     var playbackProgress by remember { mutableStateOf(0f) }
     var durationMs by remember { mutableStateOf(0) }
+    var recordingLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     // Cek ulang status rekaman tiap kali task-nya beda (buka detail debitur lain).
     LaunchedEffect(task.taskId) {
@@ -83,6 +86,17 @@ fun WorkingPaperDetailScreen(
             }
         } ?: emptyList()
         durationMs = path?.let { getAudioDurationMs(it) } ?: 0
+        recordingLocation = path?.let { p ->
+            val locationFile = File(File(p).parentFile, "${File(p).nameWithoutExtension}.location")
+            if (locationFile.exists()) {
+                val parts = locationFile.readText().split(",")
+                val lat = parts.getOrNull(0)?.toDoubleOrNull()
+                val lng = parts.getOrNull(1)?.toDoubleOrNull()
+                if (lat != null && lng != null) lat to lng else null
+            } else {
+                null
+            }
+        }
     }
 
     // Stop playback otomatis begitu keluar dari halaman Detail ini (balik ke Daftar, lanjut Rekam, dll).
@@ -190,6 +204,12 @@ fun WorkingPaperDetailScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             InfoRow(
+                icon = "🏠",
+                primary = task.alamat,
+                secondary = "Alamat debitur"
+            )
+            HorizontalDivider()
+            InfoRow(
                 icon = "🕒",
                 primary = "Jatuh Tempo: ${task.dueDate}",
                 secondary = "Overdue ${task.overdue} hari • Tenor ${task.tenor} bulan"
@@ -264,6 +284,39 @@ fun WorkingPaperDetailScreen(
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
                             ) {
                                 Text(if (isPlaying) "⏸" else "▶", fontSize = 22.sp)
+                            }
+                        }
+
+                        recordingLocation?.let { (lat, lng) ->
+                            Spacer(modifier = Modifier.height(16.dp))
+                            HorizontalDivider(color = Color(0xFF3A3A3A))
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("📍", modifier = Modifier.width(28.dp))
+                                Column {
+                                    Text("Posisi saat rekaman", color = Color.White, fontWeight = FontWeight.Medium)
+                                    Text(
+                                        "%.6f, %.6f".format(lat, lng),
+                                        color = Color.Gray,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = {
+                                    val uri = Uri.parse("geo:$lat,$lng?q=$lat,$lng(${Uri.encode(task.debiturName)})")
+                                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                                    try {
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        // Nggak ada app peta terinstall — no-op, biarin user tau lewat UI lain kalau perlu.
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                            ) {
+                                Text("Buka di Peta")
                             }
                         }
                     }
