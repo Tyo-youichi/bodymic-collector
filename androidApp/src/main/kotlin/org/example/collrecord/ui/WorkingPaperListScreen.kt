@@ -12,6 +12,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,10 +22,16 @@ import org.example.collrecord.model.WorkingPaper
 @Composable
 fun WorkingPaperListScreen(
     taskList: List<WorkingPaper>,
-    onTaskSelected: (WorkingPaper) -> Unit
+    onTaskSelected: (WorkingPaper) -> Unit,
+    onHistoryClick: () -> Unit
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Daftar Kunjungan") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Daftar Kunjungan") },
+                actions = { TextButton(onClick = onHistoryClick) { Text("Riwayat") } }
+            )
+        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier

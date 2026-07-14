@@ -35,8 +35,11 @@ class UploadWorker(
             longitude = longitude
         )
 
+        // File TIDAK dihapus di sini walaupun upload sukses — backend beneran belum ada,
+        // dan rekaman perlu tetap tersimpan lokal supaya bisa di-play dari Riwayat Rekaman.
+        // Kalau nanti mau auto-cleanup setelah backend asli & terverifikasi sukses, tinggal
+        // tambahkan file.delete() lagi di branch isSuccess di bawah.
         return if (uploadResult.isSuccess) {
-            file.delete()
             Result.success()
         } else {
             Result.retry()

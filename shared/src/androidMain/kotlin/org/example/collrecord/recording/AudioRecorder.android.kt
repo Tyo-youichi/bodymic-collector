@@ -10,7 +10,10 @@ actual class AudioRecorder actual constructor(private val context: PlatformConte
     private var outputPath: String? = null
 
     actual fun startRecording(taskId: String): String {
-        val file = File(context.context.cacheDir, "$taskId.m4a")
+        // Simpan di filesDir (persistent, tidak dibersihkan otomatis oleh OS seperti cacheDir),
+        // supaya rekaman tetap ada & bisa di-play kapan pun, terlepas dari status upload ke server.
+        val recordingsDir = File(context.context.filesDir, "recordings").apply { mkdirs() }
+        val file = File(recordingsDir, "$taskId.m4a")
         outputPath = file.absolutePath
 
         recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
