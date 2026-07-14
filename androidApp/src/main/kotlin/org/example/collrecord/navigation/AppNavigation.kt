@@ -29,11 +29,14 @@ fun AppNavigation() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.List) }
     val workingPaperViewModel: WorkingPaperViewModel = viewModel()
     val taskList by workingPaperViewModel.taskList.collectAsState()
+    val visibleCount by workingPaperViewModel.visibleCount.collectAsState()
 
     when (val screen = currentScreen) {
         is Screen.List -> {
             WorkingPaperListScreen(
-                taskList = taskList,
+                taskList = taskList.take(visibleCount),
+                hasMore = visibleCount < taskList.size,
+                onLoadMore = { workingPaperViewModel.loadMore() },
                 onTaskSelected = { task -> currentScreen = Screen.Detail(task) }
             )
         }

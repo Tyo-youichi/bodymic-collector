@@ -3,6 +3,7 @@ package org.example.collrecord.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,16 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +41,8 @@ private val MONTH_NAMES = listOf(
 @Composable
 fun WorkingPaperListScreen(
     taskList: List<WorkingPaper>,
+    hasMore: Boolean,
+    onLoadMore: () -> Unit,
     onTaskSelected: (WorkingPaper) -> Unit
 ) {
     val grouped = taskList.groupBy { it.dueDate }.toSortedMap()
@@ -66,6 +72,21 @@ fun WorkingPaperListScreen(
                 item { DateSectionHeader(dueDate) }
                 items(tasksForDate) { task ->
                     WorkingPaperCard(task = task, onClick = { onTaskSelected(task) })
+                }
+            }
+            if (hasMore) {
+                // Sentinel: begitu item ini kekompos (user scroll sampai row paling bawah),
+                // trigger loadMore() buat "buka" 10 data berikutnya.
+                item(key = "load_more_sentinel") {
+                    LaunchedEffect(Unit) { onLoadMore() }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    }
                 }
             }
             item { Spacer(modifier = Modifier.height(24.dp)) }
