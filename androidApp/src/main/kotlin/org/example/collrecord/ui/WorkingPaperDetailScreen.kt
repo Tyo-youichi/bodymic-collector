@@ -34,7 +34,8 @@ import org.example.collrecord.ui.theme.accentColorFor
 fun WorkingPaperDetailScreen(
     task: WorkingPaper,
     onBack: () -> Unit,
-    onStartVisit: () -> Unit
+    onStartVisit: () -> Unit,
+    onHistoryClick: () -> Unit
 ) {
     val accent = accentColorFor(task.businessUnit)
 
@@ -42,7 +43,8 @@ fun WorkingPaperDetailScreen(
         topBar = {
             TopAppBar(
                 title = {},
-                navigationIcon = { TextButton(onClick = onBack) { Text("Tutup") } }
+                navigationIcon = { TextButton(onClick = onBack) { Text("Tutup") } },
+                actions = { TextButton(onClick = onHistoryClick) { Text("Riwayat") } }
             )
         },
         bottomBar = {

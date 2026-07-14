@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -38,8 +37,7 @@ private val MONTH_NAMES = listOf(
 @Composable
 fun WorkingPaperListScreen(
     taskList: List<WorkingPaper>,
-    onTaskSelected: (WorkingPaper) -> Unit,
-    onHistoryClick: () -> Unit
+    onTaskSelected: (WorkingPaper) -> Unit
 ) {
     val grouped = taskList.groupBy { it.dueDate }.toSortedMap()
 
@@ -47,7 +45,6 @@ fun WorkingPaperListScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Daftar Kunjungan", fontWeight = FontWeight.Bold) },
-                actions = { TextButton(onClick = onHistoryClick) { Text("Riwayat") } },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = CollectorBlue,
                     titleContentColor = Color.White,

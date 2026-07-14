@@ -23,7 +23,7 @@ private sealed class Screen {
     // dibuka ulang), supaya RecordingViewModel selalu fresh dan nggak kebawa state lama
     // (bug: state "Uploaded" dari task sebelumnya bikin task berikutnya langsung ke-bounce balik).
     data class Recording(val task: WorkingPaper, val instanceId: Long = System.nanoTime()) : Screen()
-    object History : Screen()
+    data class History(val fromTask: WorkingPaper) : Screen()
 }
 
 @Composable
@@ -36,15 +36,15 @@ fun AppNavigation() {
         is Screen.List -> {
             WorkingPaperListScreen(
                 taskList = taskList,
-                onTaskSelected = { task -> currentScreen = Screen.Detail(task) },
-                onHistoryClick = { currentScreen = Screen.History }
+                onTaskSelected = { task -> currentScreen = Screen.Detail(task) }
             )
         }
         is Screen.Detail -> {
             WorkingPaperDetailScreen(
                 task = screen.task,
                 onBack = { currentScreen = Screen.List },
-                onStartVisit = { currentScreen = Screen.Recording(screen.task) }
+                onStartVisit = { currentScreen = Screen.Recording(screen.task) },
+                onHistoryClick = { currentScreen = Screen.History(screen.task) }
             )
         }
         is Screen.Recording -> {
@@ -56,7 +56,7 @@ fun AppNavigation() {
             )
         }
         is Screen.History -> {
-            RecordingHistoryScreen(onBack = { currentScreen = Screen.List })
+            RecordingHistoryScreen(onBack = { currentScreen = Screen.Detail(screen.fromTask) })
         }
     }
 }
